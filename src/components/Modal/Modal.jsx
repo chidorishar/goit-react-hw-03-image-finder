@@ -2,11 +2,27 @@ import { Component } from 'react';
 import css from './Modal.module.css';
 
 export class Modal extends Component {
+  componentDidMount() {
+    window.addEventListener('keydown', this.onKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  onKeyDown = e => {
+    if (e.code === 'Escape') this.props.closeModalCallback();
+  };
+
   render() {
+    const { imageData, closeModalCallback } = this.props;
     return (
-      <div className={css.overlay}>
+      <div
+        className={css.overlay}
+        onClick={e => e.target === e.currentTarget && closeModalCallback()}
+      >
         <div className={css.modal}>
-          <img src="" alt="" />
+          <img src={imageData.largeImageURL} alt={`id: ${imageData.id}`} />
         </div>
       </div>
     );
