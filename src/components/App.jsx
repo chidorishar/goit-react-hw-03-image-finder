@@ -22,6 +22,8 @@ export class App extends Component {
     this.setState({ imageDataToShowInModal: clickedImageData });
 
   onUserSearchInput = async query => {
+    if (!query) return;
+
     const response = await this.#pixabayAPI.loadImagesByQuery(query);
     this.setState({ imagesData: responseToImagesData(response) });
   };
