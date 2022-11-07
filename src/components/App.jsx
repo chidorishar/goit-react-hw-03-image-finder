@@ -20,10 +20,23 @@ export class App extends Component {
     isWaitingForImages: false,
   };
   #pixabayAPI = null;
+  #scrollToElSelector = null;
 
   constructor() {
     super();
     this.#pixabayAPI = new PixabayAPI();
+  }
+
+  componentDidUpdate() {
+    if (!this.#scrollToElSelector) return;
+
+    const el = document.querySelector(this.#scrollToElSelector);
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+      inline: 'nearest',
+    });
+    this.#scrollToElSelector = null;
   }
 
   onGalleryCardClicked = clickedImageData =>
@@ -55,6 +68,7 @@ export class App extends Component {
         ],
         isWaitingForImages: false,
       }));
+      this.#scrollToElSelector = `img[alt="id: ${response[0].id}"]`;
     }
   };
 
