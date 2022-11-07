@@ -45,7 +45,7 @@ export class App extends Component {
   onUserSearchInput = async query => {
     if (!query) return;
 
-    this.setState({ isWaitingForImages: true });
+    this.setState({ imagesData: [], isWaitingForImages: true });
     const response = await this.#pixabayAPI.loadImagesByQuery(query);
     this.setState({
       imagesData: responseToImagesData(response),
