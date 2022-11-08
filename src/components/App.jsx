@@ -7,7 +7,7 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 
-import { PixabayAPI } from 'services/fetchImagesAPI';
+import { pixabayAPI } from 'services/fetchImagesAPI';
 import { responseToImagesData } from 'helpers/responseToImagesData';
 
 import css from './App.module.css';
@@ -15,61 +15,50 @@ import css from './App.module.css';
 export class App extends Component {
   state = {
     searchQuery: null,
+    page: 1,
     imagesData: null,
     imageDataToShowInModal: null,
     isWaitingForImages: false,
   };
-  #pixabayAPI = null;
-  #scrollToElSelector = null;
 
-  constructor() {
-    super();
-    this.#pixabayAPI = new PixabayAPI();
-  }
+  async componentDidUpdate(prevProps, prevState) {
+    //TODO scroll to first of newly loaded images
 
-  componentDidUpdate() {
-    if (!this.#scrollToElSelector) return;
+    const { searchQuery, page } = this.state;
 
-    const el = document.querySelector(this.#scrollToElSelector);
-    el.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-      inline: 'nearest',
-    });
-    this.#scrollToElSelector = null;
+    //load new images
+    if (prevState.page !== page || prevState.searchQuery !== searchQuery) {
+      this.setState({ isWaitingForImages: true });
+      const response = await pixabayAPI(searchQuery, page);
+      //there is new images in response
+      if (response.length)
+        this.setState(prevState => ({
+          imagesData: [
+            ...prevState.imagesData,
+            ...responseToImagesData(response),
+          ],
+        }));
+      this.setState({
+        isWaitingForImages: false,
+      });
+    }
   }
 
   onGalleryCardClicked = clickedImageData =>
     this.setState({ imageDataToShowInModal: clickedImageData });
 
-  onUserSearchInput = async query => {
-    if (!query) return;
+  onUserSearchInput = async searchQuery => {
+    if (!searchQuery) return;
 
-    this.setState({ imagesData: [], isWaitingForImages: true });
-    const response = await this.#pixabayAPI.loadImagesByQuery(query);
-    this.setState({
-      imagesData: responseToImagesData(response),
-      isWaitingForImages: false,
-    });
+    this.setState({ searchQuery, page: 1, imagesData: [] });
   };
 
   closeModal = () => this.setState({ imageDataToShowInModal: null });
 
-  showMoreImages = async () => {
-    let response = null;
-
-    if (this.#pixabayAPI.canLoadMoreImages()) {
-      this.setState({ isWaitingForImages: true });
-      response = await this.#pixabayAPI.loadMoreImages();
-      this.setState(prevState => ({
-        imagesData: [
-          ...prevState.imagesData,
-          ...responseToImagesData(response),
-        ],
-        isWaitingForImages: false,
-      }));
-      this.#scrollToElSelector = `img[alt="id: ${response[0].id}"]`;
-    }
+  incrementPaginationByOne = () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
   };
 
   render() {
@@ -97,7 +86,9 @@ export class App extends Component {
           />
         )}
         {imagesData?.length && (
-          <Button clickHandler={this.showMoreImages}>Load More</Button>
+          <Button clickHandler={this.incrementPaginationByOne}>
+            Load More
+          </Button>
         )}
 
         {imageDataToShowInModal && (
