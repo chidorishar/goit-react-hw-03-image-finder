@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const searchOptions = {
+export const searchOptions = {
   key: '28936627-cce82c9af8b6ea5e0aa07396c',
   q: '',
   image_type: 'photo',
@@ -16,8 +16,9 @@ export async function pixabayAPI(searchQuery, page) {
     params: { ...searchOptions, q: searchQuery, page },
   });
 
+  const { hits, totalHits } = response.data;
   if (response.status === 200) {
-    return response.data.hits;
+    return { hits, totalHits };
   } else {
     throw new Error(response.statusText);
   }

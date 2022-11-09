@@ -7,8 +7,7 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 
-import { pixabayAPI } from 'services/fetchImagesAPI';
-import { responseToImagesData } from 'helpers/responseToImagesData';
+import { pixabayAPI, searchOptions } from 'services/fetchImagesAPI';
 
 import css from './App.module.css';
 
@@ -20,8 +19,9 @@ export class App extends Component {
     imageDataToShowInModal: null,
     isWaitingForImages: false,
   };
+  canLoadMore = false;
 
-  async componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(_, prevState) {
     //TODO scroll to first of newly loaded images
 
     const { searchQuery, page } = this.state;
@@ -29,15 +29,16 @@ export class App extends Component {
     //load new images
     if (prevState.page !== page || prevState.searchQuery !== searchQuery) {
       this.setState({ isWaitingForImages: true });
-      const response = await pixabayAPI(searchQuery, page);
+      const { hits: response, totalHits } = await pixabayAPI(searchQuery, page);
       //there is new images in response
-      if (response.length)
+      if (response.length) {
+        const { page } = this.state;
+
+        this.canLoadMore = page < Math.ceil(totalHits / searchOptions.per_page);
         this.setState(prevState => ({
-          imagesData: [
-            ...prevState.imagesData,
-            ...responseToImagesData(response),
-          ],
+          imagesData: [...prevState.imagesData, ...response],
         }));
+      }
       this.setState({
         isWaitingForImages: false,
       });
@@ -85,7 +86,7 @@ export class App extends Component {
             ariaLabel="three-circles-rotating"
           />
         )}
-        {imagesData?.length && (
+        {imagesData?.length && this.canLoadMore && (
           <Button clickHandler={this.incrementPaginationByOne}>
             Load More
           </Button>
