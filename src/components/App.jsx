@@ -22,8 +22,6 @@ export class App extends Component {
   canLoadMore = false;
 
   async componentDidUpdate(_, prevState) {
-    //TODO scroll to first of newly loaded images
-
     const { searchQuery, page } = this.state;
 
     //load new images
@@ -35,9 +33,18 @@ export class App extends Component {
         const { page } = this.state;
 
         this.canLoadMore = page < Math.ceil(totalHits / searchOptions.per_page);
-        this.setState(prevState => ({
-          imagesData: [...prevState.imagesData, ...response],
-        }));
+        this.setState(
+          prevState => ({
+            imagesData: [...prevState.imagesData, ...response],
+          }),
+          () => {
+            //scroll to first of newly loaded images
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: 'smooth',
+            });
+          }
+        );
       }
       this.setState({
         isWaitingForImages: false,
