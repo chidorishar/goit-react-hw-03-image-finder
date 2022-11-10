@@ -18,8 +18,8 @@ export class App extends Component {
     imagesData: null,
     imageDataToShowInModal: null,
     isWaitingForImages: false,
+    canLoadMore: false,
   };
-  canLoadMore = false;
 
   async componentDidUpdate(_, prevState) {
     const { searchQuery, page } = this.state;
@@ -32,10 +32,10 @@ export class App extends Component {
       if (response.length) {
         const { page } = this.state;
 
-        this.canLoadMore = page < Math.ceil(totalHits / searchOptions.per_page);
         this.setState(
           prevState => ({
             imagesData: [...prevState.imagesData, ...response],
+            canLoadMore: page < Math.ceil(totalHits / searchOptions.per_page),
           }),
           () => {
             //scroll to first of newly loaded images
@@ -70,8 +70,12 @@ export class App extends Component {
   };
 
   render() {
-    const { imageDataToShowInModal, imagesData, isWaitingForImages } =
-      this.state;
+    const {
+      imageDataToShowInModal,
+      imagesData,
+      isWaitingForImages,
+      canLoadMore,
+    } = this.state;
 
     return (
       <div className={css.app}>
@@ -93,7 +97,7 @@ export class App extends Component {
             ariaLabel="three-circles-rotating"
           />
         )}
-        {imagesData?.length && this.canLoadMore && (
+        {imagesData?.length && canLoadMore && (
           <Button clickHandler={this.incrementPaginationByOne}>
             Load More
           </Button>
